@@ -68,6 +68,18 @@ class Settings(BaseModel):
         )
     )
 
+    # Authentication and security
+    secret_key: str = Field(
+        default_factory=lambda: os.getenv(
+            "SECRET_KEY",
+            os.getenv("JWT_SECRET", "bid2work-ai-development-secret-key-change-in-production-2026"),
+        )
+    )
+    token_expiry_hours: int = Field(
+        default_factory=lambda: int(os.getenv("TOKEN_EXPIRY_HOURS", "72")),
+        ge=1,
+    )
+
     # Document & PDF upload safeguards
     max_upload_size_mb: int = Field(
         default_factory=lambda: int(

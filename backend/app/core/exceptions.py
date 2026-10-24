@@ -122,6 +122,34 @@ class NotFoundError(AppError):
         )
 
 
+class AuthenticationError(AppError):
+    """Raised when authentication credentials are missing, invalid, or expired."""
+
+    def __init__(
+        self, message: str = "Authentication required or invalid credentials.", details: Optional[List[ApiErrorDetail]] = None
+    ) -> None:
+        super().__init__(
+            message=message,
+            code=ErrorCode.UNAUTHORIZED,
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            details=details,
+        )
+
+
+class ForbiddenError(AppError):
+    """Raised when an authenticated user does not have permission for the requested resource."""
+
+    def __init__(
+        self, message: str = "Access forbidden.", details: Optional[List[ApiErrorDetail]] = None
+    ) -> None:
+        super().__init__(
+            message=message,
+            code=ErrorCode.FORBIDDEN,
+            status_code=status.HTTP_403_FORBIDDEN,
+            details=details,
+        )
+
+
 class UnauthorizedReviewerError(AppError):
     """Raised when an unauthorized user attempts to approve permit items."""
 

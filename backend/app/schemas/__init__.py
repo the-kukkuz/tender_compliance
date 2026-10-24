@@ -50,6 +50,33 @@ from app.schemas.report import (
     ReportFormat,
 )
 
+from app.schemas.auth import (
+    AuthTokenResponse,
+    UserLoginRequest,
+    UserRegisterRequest,
+    UserResponse,
+    UserRole,
+)
+from app.schemas.profile import (
+    BidderProfile,
+    BidderProfileUpdateRequest,
+    BusinessIdentifier,
+    CertificationItem,
+    PastProjectItem,
+    ProfileExtractionResponse,
+)
+from app.schemas.tender import (
+    BidderComparisonRow,
+    IssuerTenderSummary,
+    TenderCreateRequest,
+    TenderDraftExtractionResponse,
+    TenderMatchSummary,
+    TenderResponse,
+    TenderStatus,
+    TenderSubmission,
+    TenderUpdateRequest,
+)
+
 __all__ = [
     "DECISION_SUPPORT_DISCLAIMER",
     "ProcessingState",
@@ -88,4 +115,25 @@ __all__ = [
     "ReportFormat",
     "ReportExportRequest",
     "ExportableReportData",
+    "UserRole",
+    "UserRegisterRequest",
+    "UserLoginRequest",
+    "UserResponse",
+    "AuthTokenResponse",
+    "BusinessIdentifier",
+    "CertificationItem",
+    "PastProjectItem",
+    "BidderProfile",
+    "BidderProfileUpdateRequest",
+    "ProfileExtractionResponse",
+    "TenderStatus",
+    "TenderCreateRequest",
+    "TenderUpdateRequest",
+    "TenderResponse",
+    "TenderDraftExtractionResponse",
+    "TenderMatchSummary",
+    "TenderSubmission",
+    "IssuerTenderSummary",
+    "BidderComparisonRow",
 ]
+

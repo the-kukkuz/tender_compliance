@@ -93,6 +93,7 @@ def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     """Provide a FastAPI TestClient wired to an isolated temporary SQLite DB and upload dir."""
     test_db = tmp_path / "test_audit.db"
     test_uploads = tmp_path / "uploads"
+    monkeypatch.setenv("DATABASE_URL", str(test_db))
     monkeypatch.setenv("SQLITE_DB_PATH", str(test_db))
     monkeypatch.setenv("TEMP_UPLOAD_DIR", str(test_uploads))
     get_settings.cache_clear()

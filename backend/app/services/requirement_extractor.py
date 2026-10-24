@@ -8,6 +8,7 @@ import re
 from typing import List, Optional, Tuple
 
 from app.core.config import Settings, get_settings
+from app.core.exceptions import ExternalLLMError
 from app.core.logging import get_logger
 from app.schemas.compliance import (
     RequirementCategory,
@@ -68,54 +69,82 @@ _CATEGORY_CONFIG: List[Tuple[RequirementCategory, str, List[str], str, bool]] = 
             "solvency",
             "annual revenue",
             "balance sheet",
+            "banker's certificate",
+            "bankers certificate",
+            "bid capacity",
+            "estimated cost",
+            "earnest money",
+            "emd",
+            "tender fees",
+            "tender fee",
         ],
-        "Audited Financial Statements, certified balance sheets, or banker solvency certificate.",
+        "Audited Financial Statements, certified balance sheets, CA net worth certificate, or EMD / tender fee proof.",
         False,
     ),
     (
         RequirementCategory.EXPERIENCE,
         "Similar Project Track Record & Experience",
         [
+            "similar work",
+            "similar works",
+            "similar completed work",
+            "similar completed works",
+            "completed works",
             "experience",
             "similar project",
             "track record",
-            "completed projects",
             "years of experience",
             "past performance",
+            "completion certificate",
+            "completion certificates",
             "reference letter",
-            "reference letters",
             "client reference",
         ],
-        "Client completion certificates, reference letters, or contract milestone logs.",
+        "Client completion certificates with LOA, agreement copy, and executive engineer sign-off.",
         False,
     ),
     (
         RequirementCategory.ELIGIBILITY,
-        "Bidder Legal & Registration Eligibility",
+        "Bidder Statutory Registration & Eligibility",
         [
+            "permanent account number",
+            "pan",
+            "gst",
+            "gstin",
+            "provident fund",
+            "pf registration",
+            "esi",
+            "esi registration",
+            "integrity pact",
+            "make in india",
+            "local content",
+            "blacklisted",
+            "debarred",
+            "digital signature",
+            "dsc",
             "eligible",
             "eligibility",
             "registered",
             "incorporation",
             "license",
-            "joint venture",
-            "commercial registration",
+            "trade license",
         ],
-        "Certificate of Incorporation, commercial trade license, or active registration proof.",
+        "Valid PAN card, GST registration, EPF & ESI certificates, signed Integrity Pact, and non-debarment declaration.",
         False,
     ),
     (
         RequirementCategory.DEADLINE,
-        "Submission & Mobilization Deadlines",
+        "Submission & Completion Milestones",
         [
             "deadline",
             "submission date",
             "closing date",
             "completion period",
             "schedule",
+            "milestone",
             "mobilization date",
         ],
-        "Execution schedule, timeline commitment, or delivery schedule.",
+        "Stipulated completion schedule adherence statement and milestone timeline.",
         False,
     ),
     (
@@ -125,20 +154,23 @@ _CATEGORY_CONFIG: List[Tuple[RequirementCategory, str, List[str], str, bool]] = 
             "specification",
             "warranty",
             "technical compliance",
-            "subcontractor",
-            "code of conduct",
+            "qap",
+            "quality assurance plan",
+            "methodology",
+            "soil investigation",
+            "tender drawings",
         ],
-        "Technical compliance statement or supporting specification sheet.",
+        "Technical compliance statement, methodology, and quality assurance plan (QAP).",
         False,
     ),
 ]
 
 _MONEY_PATTERN = re.compile(
-    r"\b((?:USD|EUR|GBP|CAD|AUD|INR|\$|€|£)\s*[\d,.]+(?:\s*(?:M|million|k|thousand|B|billion))?|[\d,.]+\s*(?:M|million|k|thousand|B|billion)\s*(?:USD|EUR|GBP)?)\b",
+    r"\b((?:Rs\.?|INR|USD|EUR|GBP|CAD|AUD|\$|€|£)\s*[\d,.]+(?:\s*(?:Crores?|Lakhs?|M|million|k|thousand|B|billion|/-))?|[\d,.]+\s*(?:Crores?|Lakhs?|M|million|k|thousand|B|billion)\s*(?:Rs\.?|INR|USD|EUR|GBP)?)\b",
     re.IGNORECASE,
 )
 _ISO_PATTERN = re.compile(r"\b(ISO\s*\d{4,5}(?::\d{4})?)\b", re.IGNORECASE)
-_DATE_PATTERN = re.compile(r"\b(20\d{2}-\d{2}-\d{2})\b")
+_DATE_PATTERN = re.compile(r"\b(\d{2}[./-]\d{2}[./-]\d{4}|20\d{2}-\d{2}-\d{2})\b")
 _YEARS_PATTERN = re.compile(
     r"\b(\d+\s*(?:\+)?\s*years?(?:\s*of\s*experience)?)\b", re.IGNORECASE
 )
@@ -221,11 +253,17 @@ class RequirementExtractorService:
             ]
 
             for chunk in chunks:
-                llm_res = await self.llm_provider.extract_requirements_from_chunk(
-                    document_filename=filename,
-                    page_number=page.page_number,
-                    page_text=chunk,
-                )
+                try:
+                    llm_res = await self.llm_provider.extract_requirements_from_chunk(
+                        document_filename=filename,
+                        page_number=page.page_number,
+                        page_text=chunk,
+                    )
+                except ExternalLLMError as exc:
+                    logger.warning(
+                        f"LLM extraction unavailable ({exc}); gracefully falling back to deterministic extraction."
+                    )
+                    return self._extract_deterministic(tender_extraction)
 
                 for item in llm_res.requirements:
                     # Grounding verification: check if item.excerpt exists in the actual page text

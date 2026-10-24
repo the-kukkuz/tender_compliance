@@ -346,3 +346,199 @@ export interface ExportableReportData {
   mime_type: string;
   disclaimer: string;
 }
+
+/* -------------------------------------------------------------------------- */
+/* 5. User Roles, Authentication, and Multi-Mode                              */
+/* -------------------------------------------------------------------------- */
+
+export type UserRole = "SEEKER" | "ISSUER" | "BOTH";
+
+export interface User {
+  user_id: string;
+  email: string;
+  name: string;
+  organisation_name: string;
+  role: UserRole;
+  created_at: string;
+}
+
+export interface AuthTokenResponse {
+  access_token: string;
+  token_type: string;
+  user: User;
+}
+
+export interface UserRegisterRequest {
+  email: string;
+  password: string;
+  name: string;
+  organisation_name: string;
+  role: UserRole;
+}
+
+export interface UserLoginRequest {
+  email: string;
+  password: string;
+}
+
+/* -------------------------------------------------------------------------- */
+/* 6. Bidder Profile                                                         */
+/* -------------------------------------------------------------------------- */
+
+export interface BusinessIdentifier {
+  id_type: string;
+  value: string;
+}
+
+export interface CertificationItem {
+  name: string;
+  cert_number?: string | null;
+  valid_until?: string | null;
+  accredited_by?: string | null;
+}
+
+export interface PastProjectItem {
+  title: string;
+  client: string;
+  value?: number | null;
+  currency?: string | null;
+  completion_year?: number | null;
+}
+
+export interface BidderProfile {
+  profile_id: string;
+  user_id: string;
+  organisation_name: string;
+  business_identifiers: BusinessIdentifier[];
+  categories: string[];
+  experience_years: number;
+  experience_summary: string;
+  past_projects: PastProjectItem[];
+  certifications: CertificationItem[];
+  annual_turnover: number;
+  currency: string;
+  financial_audited: boolean;
+  locations: string[];
+  safety_manual_approved: boolean;
+  other_qualifications: string[];
+  supporting_document_ids: string[];
+  is_verified: boolean;
+  updated_at: string;
+}
+
+export interface ProfileExtractionResponse {
+  document_id: string;
+  filename: string;
+  extracted_profile: BidderProfile;
+  review_notes: string[];
+}
+
+/* -------------------------------------------------------------------------- */
+/* 7. Tenders, Matching, and Bidder Comparison Matrix                         */
+/* -------------------------------------------------------------------------- */
+
+export type TenderStatus = "DRAFT" | "PUBLISHED" | "CLOSED";
+
+export interface TenderCreateRequest {
+  title: string;
+  description: string;
+  category: string;
+  submission_deadline: string;
+  financial_threshold?: number | null;
+  financial_currency?: string;
+  geographic_restrictions?: string[];
+  required_certifications?: string[];
+  min_experience_years?: number;
+  safety_requirements?: string[];
+  required_documents?: string[];
+  document_id: string;
+  extracted_requirements: TenderRequirement[];
+}
+
+export interface TenderResponse {
+  tender_id: string;
+  issuer_user_id: string;
+  issuer_organisation: string;
+  title: string;
+  description: string;
+  category: string;
+  status: TenderStatus;
+  submission_deadline: string;
+  financial_threshold?: number | null;
+  financial_currency?: string;
+  geographic_restrictions: string[];
+  required_certifications: string[];
+  min_experience_years: number;
+  safety_requirements: string[];
+  required_documents: string[];
+  document_id: string;
+  extracted_requirements: TenderRequirement[];
+  requirement_version: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TenderDraftExtractionResponse {
+  document_id: string;
+  filename: string;
+  extracted_tender: TenderCreateRequest;
+  review_notes: string[];
+}
+
+export interface TenderMatchSummary {
+  tender: TenderResponse;
+  compliance_score: number;
+  has_mandatory_gaps: boolean;
+  mandatory_satisfied_count: number;
+  mandatory_total_count: number;
+  optional_satisfied_count: number;
+  optional_total_count: number;
+  missing_mandatory_titles: string[];
+  conflicting_items: string[];
+  supporting_evidence_count: number;
+  match_explanation: string;
+  days_remaining: number;
+  next_action: string;
+  sorting_rule: string;
+  disclaimer: string;
+  requirement_assessments?: RequirementAssessment[];
+}
+
+export interface TenderSubmission {
+  submission_id: string;
+  tender_id: string;
+  requirement_version: number;
+  bidder_user_id: string;
+  bidder_organisation: string;
+  profile_snapshot: BidderProfile;
+  bidder_document_ids: string[];
+  compliance_score: number;
+  status: string;
+  assessment: RequirementAssessment[];
+  summary: ComplianceSummaryMetrics;
+  submitted_at: string;
+  updated_at: string;
+}
+
+export interface IssuerTenderSummary {
+  tender: TenderResponse;
+  submission_count: number;
+  compliant_submissions_count: number;
+  submissions_with_gaps_count: number;
+  avg_compliance_score: number;
+}
+
+export interface BidderComparisonRow {
+  submission_id: string;
+  tender_id: string;
+  requirement_version: number;
+  bidder_organisation: string;
+  compliance_score: number;
+  mandatory_satisfied: string;
+  missing_evidence: string[];
+  conflicting_evidence: string[];
+  submission_date: string;
+  status: string;
+  assessment: RequirementAssessment[];
+}
+
